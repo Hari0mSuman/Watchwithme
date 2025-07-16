@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>watchwithme - Join or Create Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #1f1c2c, #928dab);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+    }
+    .container {
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+    }
+    input {
+      background: #eee;
+    }
+    button {
+      background: #00c6ff;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0079a3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 watchwithme</h1>
+
+    <form id="createRoomForm" method="POST" action="/room">
+      <input type="text" name="username" placeholder="Enter your name" required>
+      <input type="hidden" name="room" id="generatedRoom">
+      <button type="submit" onclick="generateRoomCode()">🎲 Create New Room</button>
+    </form>
+
+    <hr style="margin: 20px 0; border-color: #777;">
+
+    <form method="POST" action="/room">
+      <input type="text" name="username" placeholder="Enter your name" required>
+      <input type="text" name="room" placeholder="Enter room code" required>
+      <button type="submit">🔑 Join Existing Room</button>
+    </form>
+  </div>
+
+  <script>
+    function generateRoomCode() {
+      const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      document.getElementById('generatedRoom').value = randomCode;
+    }
+  </script>
+</body>
+</html>

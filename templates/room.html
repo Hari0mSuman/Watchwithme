@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>watchwithme - Room</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #121212;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 1rem;
+      background: #1e1e1e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #333;
+    }
+    main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .video-section {
+      flex: 2;
+      padding: 1rem;
+    }
+    .chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #2e2e2e;
+      background-color: #1c1c1c;
+    }
+    video {
+      width: 100%;
+      max-height: 70vh;
+      margin-top: 10px;
+      border-radius: 10px;
+      background: black;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .chat-input {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid #2e2e2e;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      margin-right: 10px;
+    }
+    .chat-input button {
+      padding: 10px 16px;
+      background-color: #00c6ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <strong>Room:</strong> {{ room }} | <strong>User:</strong> {{ username }}
+    </div>
+  </header>
+  <main>
+    <div class="video-section">
+      <form id="uploadForm">
+        <input type="file" name="file" id="videoUpload" accept="video/*" required>
+        <button type="submit">Upload & Share</button>
+      </form>
+      <video id="videoPlayer" controls></video>
+    </div>
+    <div class="chat-section">
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const room = "{{ room }}";
+    const username = "{{ username }}";
+    const video = document.getElementById("videoPlayer");
+
+    socket.emit('join', { username, room });
+
+    socket.on('chat', (data) => {
+      const msgContainer = document.getElementById('chat-messages');
+      const message = document.createElement('div');
+      message.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+      msgContainer.appendChild(message);
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    });
+
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      if (message) {
+        socket.emit('chat', { username, room, message });
+        input.value = '';
+      }
+    }
+
+    // 🔼 Video Upload to Server
+    const uploadForm = document.getElementById('uploadForm');
+    uploadForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('videoUpload');
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      fetch('/upload', {
+        method: 'POST',
+        body: formData
+      }).then(res => res.json())
+        .then(data => {
+          const videoURL = data.video_url;
+          video.src = videoURL;
+          socket.emit('share-video', { url: videoURL, room });
+        });
+    });
+
+    // 🔄 Receive shared video
+    socket.on('share-video', (data) => {
+      video.src = data.url;
+    });
+
+    // 🔁 Sync video controls
+    video.addEventListener('play', () => {
+      socket.emit('video-control', { action: 'play', room });
+    });
+    video.addEventListener('pause', () => {
+      socket.emit('video-control', { action: 'pause', room });
+    });
+    video.addEventListener('seeked', () => {
+      socket.emit('video-control', { action: 'seek', room, time: video.currentTime });
+    });
+
+    socket.on('video-control', (data) => {
+      if (data.action === 'play') video.play();
+      if (data.action === 'pause') video.pause();
+      if (data.action === 'seek') video.currentTime = data.time;
+    });
+  </script>
+</body>
+</html>
