@@ -51,6 +51,6 @@ def handle_video_control(data):
 @socketio.on('share-video')
 def handle_share_video(data):
     emit('share-video', data, to=data['room'], include_self=False)
-
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+
