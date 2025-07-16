@@ -51,6 +51,12 @@ def handle_video_control(data):
 @socketio.on('share-video')
 def handle_share_video(data):
     emit('share-video', data, to=data['room'], include_self=False)
+
+
+
+
 if __name__ == '__main__':
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+    port = int(os.environ.get("PORT", 5000))  # Use PORT from environment, fallback to 5000
+    socketio.run(app, host='0.0.0.0', port=port, allow_unsafe_werkzeug=True)
+
 
