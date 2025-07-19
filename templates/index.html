@@ -1,80 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <title>watchwithme - Join or Create Room</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to right, #1f1c2c, #928dab);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      color: white;
-    }
-    .container {
-      background-color: rgba(0, 0, 0, 0.6);
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 24px;
-      font-weight: 600;
-    }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 8px;
-    }
-    input {
-      background: #eee;
-    }
-    button {
-      background: #00c6ff;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #0079a3;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WatchWithMe - Create or Join Room</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="container">
-    <h1>🎬 watchwithme</h1>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
 
-    <form id="createRoomForm" method="POST" action="/room">
-      <input type="text" name="username" placeholder="Enter your name" required>
-      <input type="hidden" name="room" id="generatedRoom">
-      <button type="submit" onclick="generateRoomCode()">🎲 Create New Room</button>
-    </form>
+  <div class="bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
+    <h1 class="text-3xl font-bold mb-6 text-center">🎥 WatchWithMe</h1>
 
-    <hr style="margin: 20px 0; border-color: #777;">
+    <!-- Room form -->
+    <form class="flex flex-col gap-4" id="roomForm">
+      <input type="text" name="username" placeholder="Enter your name" required
+        class="p-3 rounded bg-gray-700 border border-gray-600 placeholder-gray-400" />
 
-    <form method="POST" action="/room">
-      <input type="text" name="username" placeholder="Enter your name" required>
-      <input type="text" name="room" placeholder="Enter room code" required>
-      <button type="submit">🔑 Join Existing Room</button>
+      <div id="roomInputDiv" class="hidden">
+        <input type="text" name="room" id="roomInput" placeholder="Enter room code"
+          class="p-3 rounded bg-gray-700 border border-gray-600 placeholder-gray-400" />
+      </div>
+
+      <div id="passwordToggleDiv" class="hidden">
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="enable-password" class="accent-blue-500" />
+          <label for="enable-password" class="text-sm">Enable room password</label>
+        </div>
+        <input type="password" name="password" id="password-field" placeholder="Password (optional)" disabled
+          class="p-3 rounded bg-gray-700 border border-gray-600 placeholder-gray-500 text-white" />
+      </div>
+
+      <div class="flex justify-between gap-4">
+        <button type="button" id="createBtn"
+          class="flex-1 bg-green-600 hover:bg-green-700 p-3 rounded font-semibold transition">Create Room</button>
+        <button type="button" id="joinBtn"
+          class="flex-1 bg-blue-600 hover:bg-blue-700 p-3 rounded font-semibold transition">Join Room</button>
+      </div>
     </form>
   </div>
 
   <script>
-    function generateRoomCode() {
-      const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      document.getElementById('generatedRoom').value = randomCode;
-    }
+    const createBtn = document.getElementById('createBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const roomInputDiv = document.getElementById('roomInputDiv');
+    const roomInput = document.getElementById('roomInput');
+    const form = document.getElementById('roomForm');
+    const passwordToggleDiv = document.getElementById('passwordToggleDiv');
+    const enablePassword = document.getElementById('enable-password');
+    const passwordField = document.getElementById('password-field');
+
+    createBtn.addEventListener('click', () => {
+      // Set form action and method for creating a room
+      form.action = '/create-room';
+      form.method = 'POST';
+      // Show room and password fields
+      roomInputDiv.classList.remove('hidden');
+      passwordToggleDiv.classList.remove('hidden');
+      // Generate a random room code if not already present
+      if (roomInput.value.trim() === '') {
+        const randomRoom = 'room-' + Math.random().toString(36).substring(2, 8);
+        roomInput.value = randomRoom;
+      }
+      form.submit();
+    });
+
+    joinBtn.addEventListener('click', () => {
+      // Set form action and method for joining a room
+      form.action = '/join-room';
+      form.method = 'POST';
+      // Show room and password fields
+      roomInputDiv.classList.remove('hidden');
+      passwordToggleDiv.classList.remove('hidden');
+      // Require room code to join
+      if (roomInput.value.trim() === '') {
+        roomInput.focus();
+        return;
+      }
+      form.submit();
+    });
+
+    enablePassword.addEventListener('change', () => {
+      passwordField.disabled = !enablePassword.checked;
+      passwordField.required = enablePassword.checked;
+    });
   </script>
 </body>
-</html>
