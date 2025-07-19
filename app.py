@@ -1,62 +1,63 @@
-from flask import Flask, render_template, request, send_from_directory, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_socketio import SocketIO, emit, join_room
 import os
-from werkzeug.utils import secure_filename
+import string
+import random
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SECRET_KEY'] = 'supersecretkey'
+socketio = SocketIO(app, cors_allowed_origins='*')
 
-socketio = SocketIO(app)
+rooms = {}
 
-@app.route('/')
+def generate_room_code(length=6):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        username = request.form['username']
+        room = request.form['room'] or generate_room_code()
+        password = request.form.get('password', '')
+
+        session['username'] = username
+        session['room'] = room
+
+        if room not in rooms:
+            rooms[room] = {'password': password, 'users': set()}
+        elif rooms[room]['password'] != password:
+            return render_template('index.html', error='Incorrect room password.')
+
+        return redirect(url_for('room'))
     return render_template('index.html')
 
-@app.route('/room', methods=['POST'])
+@app.route('/room')
 def room():
-    username = request.form['username']
-    room = request.form['room']
+    username = session.get('username')
+    room = session.get('room')
+    if not username or not room:
+        return redirect(url_for('index'))
     return render_template('room.html', username=username, room=room)
-
-@app.route('/upload', methods=['POST'])
-def upload():
-    file = request.files['file']
-    filename = secure_filename(file.filename)
-    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(path)
-    return {'video_url': url_for('uploaded_file', filename=filename)}
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @socketio.on('join')
 def handle_join(data):
     username = data['username']
     room = data['room']
     join_room(room)
-    emit('chat', {'username': 'System', 'message': f"{username} joined the room."}, to=room)
+    emit('chat', {'username': 'System', 'message': f'{username} has joined the room.'}, room=room)
 
 @socketio.on('chat')
 def handle_chat(data):
-    emit('chat', data, to=data['room'])
+    emit('chat', data, room=data['room'])
+
+@socketio.on('share-youtube')
+def handle_youtube(data):
+    emit('share-youtube', data, room=data['room'])
 
 @socketio.on('video-control')
 def handle_video_control(data):
-    emit('video-control', data, to=data['room'], include_self=False)
-
-@socketio.on('share-video')
-def handle_share_video(data):
-    emit('share-video', data, to=data['room'], include_self=False)
-
-
-
+    emit('video-control', data, room=data['room'])
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))  # Use PORT from environment, fallback to 5000
     socketio.run(app, host='0.0.0.0', port=port, allow_unsafe_werkzeug=True)
-
-
