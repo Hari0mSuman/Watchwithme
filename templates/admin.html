@@ -1,0 +1,56 @@
+<!-- templates/admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - WatchWithMe</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center">Admin Panel</h1>
+
+        <div class="mb-10">
+            <h2 class="text-2xl font-semibold mb-4">👤 Registered Users</h2>
+            <table class="min-w-full bg-white shadow-md rounded-xl overflow-hidden">
+                <thead class="bg-gray-200 text-gray-700">
+                    <tr>
+                        <th class="py-2 px-4">ID</th>
+                        <th class="py-2 px-4">Email</th>
+                        <th class="py-2 px-4">Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="border-t">
+                        <td class="py-2 px-4">{{ user.id }}</td>
+                        <td class="py-2 px-4">{{ user.email }}</td>
+                        <td class="py-2 px-4">{{ user.role }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div>
+            <h2 class="text-2xl font-semibold mb-4">📺 Active Rooms</h2>
+            <table class="min-w-full bg-white shadow-md rounded-xl overflow-hidden">
+                <thead class="bg-gray-200 text-gray-700">
+                    <tr>
+                        <th class="py-2 px-4">Room Code</th>
+                        <th class="py-2 px-4">Host</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                    <tr class="border-t">
+                        <td class="py-2 px-4">{{ room.code }}</td>
+                        <td class="py-2 px-4">{{ room.host_id }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
